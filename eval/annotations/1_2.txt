@@ -1,0 +1,14 @@
+image: 1_2.jpeg
+people:
+    - emotion: "happy"
+      bbox:
+            xmin: 74
+            xmax: 99
+            ymin: 24
+            ymax: 61
+    - emotion: "happy"
+      bbox:
+            xmin: 177
+            xmax: 203
+            ymin: 22
+            ymax: 57

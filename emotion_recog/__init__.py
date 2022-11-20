@@ -60,9 +60,9 @@ class EmotionModel(ABC):
         return self.detector.detect_faces(image)
 
     @abstractmethod
-    def predict(self, image):
+    def predict(self, image, return_bbox=False):
         raise NotImplementedError
 
     @abstractmethod
-    def predict_vector(self, image):
+    def predict_vector(self, image, return_bbox=False):
         raise NotImplementedError

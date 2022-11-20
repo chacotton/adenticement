@@ -22,7 +22,7 @@ class DeepFaceModel(EmotionModel):
     def __str__(self):
         return 'DeepFaceModel'
 
-    def predict_vector(self, image):
+    def predict_vector(self, image, return_bbox=False):
         bbox = self._find_faces(image)
         faces = []
         for box in bbox:
@@ -30,11 +30,16 @@ class DeepFaceModel(EmotionModel):
             img = preprocess_face(img=img, **self.preproc_kwargs)
             preds = self.model.predict(img, verbose=0)[0, :]
             faces.append(softmax(preds))
+        if return_bbox:
+            return faces, bbox
         return np.array(faces)
 
-    def predict(self, image):
-        faces = self.predict_vector(image)
+    def predict(self, image, return_bbox=False):
+        faces, bbox = self.predict_vector(image, return_bbox=True)
+        if return_bbox:
+            return [self.emotions[np.argmax(f)] for f in faces], bbox
         return np.array([self.emotions[np.argmax(f)] for f in faces])
+
 
     def imshow(self, image):
         bbox = self._find_faces(image)
