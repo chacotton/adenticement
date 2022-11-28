@@ -19,8 +19,11 @@ class HSEmotionModel(EmotionModel):
     def __str__(self):
         return 'HSEmotionModel'
 
-    def predict_vector(self, image, return_bbox=False):
-        bbox = self._find_faces(image)
+    def predict_vector(self, image, return_bbox=False, localize=True):
+        if localize:
+            bbox = self._find_faces(image)
+        else:
+            bbox = [{'xmin': 0, 'ymin': 0, 'xmax': image.shape[1], 'ymax': image.shape[0]}]
         faces = []
         for box in bbox:
             _, score_vector = self.model.predict_emotions(image[box['ymin']:box['ymax'],box['xmin']:box['xmax']], logits=True)
@@ -29,8 +32,8 @@ class HSEmotionModel(EmotionModel):
             return faces, bbox
         return np.array(faces)
 
-    def predict(self, image, return_bbox=False):
-        faces, bbox = self.predict_vector(image, return_bbox=True)
+    def predict(self, image, return_bbox=False, localize=True):
+        faces, bbox = self.predict_vector(image, return_bbox=True, localize=localize)
         emotion = []
         for i, face in enumerate(faces):
             emotion.append(self.model.idx_to_class[np.argmax(face)])

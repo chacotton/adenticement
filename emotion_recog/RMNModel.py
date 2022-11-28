@@ -22,7 +22,7 @@ class RMNModel(EmotionModel):
                 pred = self.model.detect_emotion_for_single_frame(image)
         return pred
 
-    def predict_vector(self, image, return_bbox=False):
+    def predict_vector(self, image, return_bbox=False, localize=True):
         results = self.detect(image)
         preds = []
         for face in results:
@@ -32,7 +32,7 @@ class RMNModel(EmotionModel):
             return preds, [{k: f[k] for k in f} for f in results]
         return np.array(preds)
 
-    def predict(self, image, return_bbox=False):
+    def predict(self, image, return_bbox=False, localize=True):
         results = self.detect(image)
         if return_bbox:
             return [f['emo_label'] for f in results], [{k: f[k] for k in f} for f in results]

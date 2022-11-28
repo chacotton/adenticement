@@ -7,19 +7,9 @@ import matplotlib.pyplot as plt
 import cv2
 import argparse
 import time
-from collections import namedtuple
 import numpy as np
-from bbox_iou_eval import match_bboxes
 import pandas as pd
 
-
-model_score = namedtuple("model_score", "emotion bbox runtime")
-
-
-def get_annotations(file):
-    with open(file, 'r') as f:
-        obj = yaml.safe_load(f)
-    return obj
 
 def emotion_compare(a, b):
     if a.lower() == 'happiness':
@@ -39,32 +29,24 @@ def image_viewer(image, save=False):
             cv2.imwrite(f'{str(model)}_{args.image.split("/")[-1]}', updated_image)
 
 
-def image_test(models, image):
-    preds = []
-    for i, model in enumerate(models):
-        start = time.time()
-        pred, bbox = model.predict(image, return_bbox=True)
-        runtime = time.time() - start
-        preds.append(model_score(pred, bbox, runtime))
-    return preds
-
-
 def image_tester(img_dir, save=False):
     models = [DeepFaceModel(), HSEmotionModel(), RMNModel()]
-    accuracy = [[], [], []]
+    df = pd.DataFrame(columns=[str(m) for m in models], index=['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise', 'Latency'])
     latency = [[], [], []]
-    for ims in os.listdir(img_dir + '/images'):
-        image = cv2.imread(img_dir + '/images/' + ims)
-        labels = get_annotations(img_dir + '/annotations/' + ims[:-4] + 'txt')
-        label_boxes = [e['bbox'] for e in labels['people']]
-        preds = image_test(models, image)
-        for i, pred in enumerate(preds):
-            out = match_bboxes(label_boxes, pred.bbox)
-            for y, yhat in zip(out[0], out[1]):
-                accuracy[i].append(emotion_compare(labels['people'][y]['emotion'], pred.emotion[yhat]))
-            latency[i].append(pred.runtime)
-    df = pd.DataFrame(columns=[str(m) for m in models], index=['Accuracy', 'Latency'])
-    df.loc['Accuracy', :] = [np.mean(x) for x in accuracy]
+    for dirs in os.listdir(img_dir):
+        accuracy = [[], [], []]
+        for ims in os.listdir(img_dir + '/' + dirs):
+            image = cv2.imread(img_dir + '/' + dirs + '/' + ims)
+            for i, m in enumerate(models):
+                start = time.time()
+                pred = m.predict(image, localize=False)
+                end = time.time()
+                latency[i].append(end - start)
+                if len(pred) < 1:
+                    accuracy[i].append(False)
+                else:
+                    accuracy[i].append(emotion_compare(pred[0], dirs))
+        df.loc[dirs.capitalize(), :] = [np.mean(x) for x in accuracy]
     df.loc['Latency', :] = [np.mean(x) for x in latency]
     if save:
         df.to_csv('model_test.csv')
