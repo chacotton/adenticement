@@ -10,6 +10,7 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 import pickle
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 MODELS = {
     'svm': SVC(probability=True),
@@ -45,14 +46,14 @@ def get_data():
     return labeled_vecs, labeled_targets, unlabeled_vecs, unlabeled_targets
 
 
-def test_models(model_types=None, save_best=False):
+def test_models(model_types=None, save_best=False, n_splits=10):
     if model_types is None:
-        model_types = ['svm', 'gaussian', 'knn', 'mlp', 'dt']
+        model_types = ['gaussian', 'knn', 'mlp', 'svm', 'dt']
     models = [MODELS[m] for m in model_types]
     accuracy = [0 for _ in models]
     labeled_vecs, labeled_targets, unlabeled_vecs, unlabeled_targets = get_data()
-    kf = KFold(n_splits=10)
     epoch = 0
+    kf = KFold(n_splits=n_splits)
     for train_index, test_index in kf.split(labeled_vecs):
         x_train = labeled_vecs[train_index]
         x_test = labeled_vecs[test_index]
@@ -77,7 +78,15 @@ def test_models(model_types=None, save_best=False):
         )
         with open('clf.pkl', 'wb') as f:
             pickle.dump(classifier, f)
+    return accuracy
 
 
 if __name__ == '__main__':
-    test_models(save_best=True)
+    accuracy = test_models(save_best=True, n_splits=10)
+    plt.plot(accuracy[0], label="gaussian process")
+    plt.plot(accuracy[1], label="k-neighbors")
+    plt.plot(accuracy[2], label="mlp")
+    plt.plot(accuracy[3], label="svm")
+    plt.plot(accuracy[4], label="decision tree")
+    plt.legend()
+    plt.show()
