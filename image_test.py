@@ -29,13 +29,13 @@ def image_viewer(image, save=False):
             cv2.imwrite(f'{str(model)}_{args.image.split("/")[-1]}', updated_image)
 
 
-def image_tester(img_dir, save=False):
+def image_tester(img_dir, save=False, max_images=None):
     models = [DeepFaceModel(), HSEmotionModel(), RMNModel()]
     df = pd.DataFrame(columns=[str(m) for m in models], index=['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise', 'Latency'])
     latency = [[], [], []]
     for dirs in os.listdir(img_dir):
         accuracy = [[], [], []]
-        for ims in os.listdir(img_dir + '/' + dirs):
+        for ims in os.listdir(img_dir + '/' + dirs)[:max_images]:
             image = cv2.imread(img_dir + '/' + dirs + '/' + ims)
             for i, m in enumerate(models):
                 start = time.time()
@@ -51,7 +51,7 @@ def image_tester(img_dir, save=False):
     if save:
         df.to_csv('model_test.csv')
     else:
-        print(df)
+        return df
 
 
 if __name__ == '__main__':

@@ -5,3 +5,5 @@ hsemotion
 opencv-python
 scipy
 rmn
+scikit-learn
+matplotlib
